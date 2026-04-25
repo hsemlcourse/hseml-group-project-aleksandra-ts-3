@@ -109,26 +109,18 @@ python -m src.scripts.make_synthetic_train
 В таблице метрики после прогона `02_baseline.ipynb` и `03_experiments.ipynb`.
 Приоритет выбора: `ROC-AUC` (ранжирование риска) и `Recall` по классу `Attrition=1`
 
-**Baseline** (без FE):
-
-| Модель                   | ROC-AUC (val/test) | Recall (val/test) | F1 (val/test) |
-| ------------------------ | ------------------ | ----------------- | ------------- |
-| Baseline LogReg (без FE) | 0.871 / 0.774      | 0.816 / 0.617     | 0.534 / 0.460 |
-
 **Сводка:**
 
-| Модель                    | ROC-AUC val | ROC-AUC test | Примечание |
-| ------------------------- | ----------: | -----------: | ---------- |
-| RandomForest_tuned        | **0.874**   | 0.721        | `RandomizedSearchCV`, `n_estimators=700`, `max_depth=6`, `min_samples_leaf=8`, `min_samples_split=10` |
-| LogReg + FE               | 0.872       | —            |            |
-| RandomForest + FE         | 0.865       | —            |            |
-| PCA95 + LogReg            | 0.853       | 0.775        |            |
-| Voting_soft               | 0.851       | —            |            |
-| XGBoost + FE              | 0.834       | —            |            |
-| LightGBM + FE             | 0.819       | —            |            |
-| KNN + FE                  | 0.783       | —            | k=15, веса по расстоянию |
+| Модель                                  | ROC-AUC (val/test) | Recall val/test | F1 val/test       | Примечание                                                                |
+| --------------------------------------- | ------------------ | --------------- | ----------------- | ------------------------------------------------------------------------- |
+| Baseline LogReg (без FE)                | 0.871 / 0.774      | 0.816 / 0.617   | 0.534 / 0.460     | `02_baseline.ipynb`                                                       |
+| LogReg + FE                             | 0.872 / 0.767      | 0.789 / 0.617   | 0.545 / 0.439     | `03_experiments.ipynb`                                                    |
+| RandomForest + FE                       | 0.865 / 0.718      | 0.158 / 0.128   | 0.267 / 0.211     | `03_experiments.ipynb`                                                    |
+| XGBoost + FE                            | 0.830 / 0.730      | 0.342 / 0.191   | 0.491 / 0.269     | `03_experiments.ipynb`                                                    |
+| LightGBM + FE                           | 0.819 / 0.714      | 0.421 / 0.255   | 0.525 / 0.312     | `03_experiments.ipynb`                                                    |
+| RandomForest tuned (RandomizedSearchCV) | **0.874 / 0.720**  | 0.579 / 0.362   | **0.557 / 0.366** | `n_estimators=700, max_depth=6, min_samples_leaf=8, min_samples_split=10` |
 
-**Финальный выбор для CP1:** `RandomForest tuned`: лучший `val ROC-AUC` среди проверенных конфигураций при заметно лучшем `val Recall`, чем у дефолтного RandomForest
+**Финальный выбор:** `RandomForest tuned`: лучший `val ROC-AUC` среди проверенных конфигураций при заметно лучшем `val Recall`, чем у дефолтного RandomForest
 
 Артефакты финальной модели сохранены в `models/`
 
