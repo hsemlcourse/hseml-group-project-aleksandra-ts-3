@@ -1,0 +1,15 @@
+{
+  "selected_model": "RandomForest_tuned",
+  "selection_priority": [
+    "val_roc_auc",
+    "val_recall"
+  ],
+  "test_metrics": {
+    "accuracy": 0.8,
+    "precision": 0.3695652173913043,
+    "recall": 0.3617021276595745,
+    "f1": 0.3655913978494624,
+    "roc_auc": 0.7207446808510638
+  },
+  "model_file": "final_model.joblib"
+}
