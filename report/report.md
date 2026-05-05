@@ -21,6 +21,8 @@
 
 **Источник:** [IBM HR Analytics Employee Attrition](https://www.kaggle.com/datasets/pavansubhasht/ibm-hr-analytics-attrition-dataset)
 
+**Парсинг:** при автозагрузке ответ HTTP читается как текст, затем разбирается модулем `src/attrition_parser.py` (`csv.DictReader` -> `pandas.DataFrame`), после чего таблица сохраняется в `data/raw/`, дальше EDA и обучение читают уже сохранённый CSV. Команда: `python -m src.scripts.download_data`
+
 **Причина выбора:** табличный HR-кейс с реалистичным дисбалансом классов и широким набором признаков
 
 **Основные Характеристики:**
@@ -75,7 +77,6 @@
 
    **Результат:** лучший `val ROC-AUC` среди базовых настроек у `LogReg + FE` (0.872), но по отдельным метрикам есть компромисс на test
 
-
 2. **Гипотеза:** тюнинг `RandomForest` улучшит ROC-AUC/Recall
 
    **Проверка:** `RandomizedSearchCV` (`n_iter=20`) по `n_estimators`, `max_depth`, `min_samples_leaf`, `min_samples_split`
@@ -103,7 +104,6 @@
    - validation почти без изменений
    - на test выросли `Recall` и `F1` при сохранении `ROC-AUC`
 
-
 **Таблица экспериментов:**
 
 | Модель                   | ROC-AUC (val/test) | Recall (val/test) | F1 (val/test)     |
@@ -127,6 +127,14 @@
 ## 6. Финальная модель и интерпретируемость
 
 **Итоговая модель:** **RandomForest tuned**: лучший `val ROC-AUC` среди протестированных конфигураций при приемлемом `Recall`
+
+**Почему на test ROC-AUC у tuned RF ниже, чем у baseline LogReg (0.720 vs 0.774), хотя на val RF лучше:**
+
+- Мы выбираем финальную модель по **validation**, а не по test (чтобы не подгонять выбор под test)
+- По validation tuned RF немного лучше: `val ROC-AUC = 0.874` против `0.871` у LogReg
+- На test он оказался хуже, потому что датасет небольшой и результат на одном test-сплите может заметно колебаться
+- LogReg обычно стабильнее на маленьких данных, поэтому здесь она выиграла именно на test
+- RF выбран по правилу отбора через validation.
 
 Интерпретируемость:
 
