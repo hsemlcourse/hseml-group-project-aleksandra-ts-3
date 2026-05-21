@@ -1,4 +1,5 @@
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/kOqwghv0)
+
 # ML Project — Прогноз оттока сотрудников (IBM HR Attrition)
 
 **Студент:** Целовальникова Александра Тимофеевна
@@ -34,14 +35,17 @@
 │   ├── modeling.py             # Обучение и оценка моделей
 │   ├── config.py               # Настройки проекта
 │   ├── hypothesis_tests.py     # Статистические проверки для EDA
+│   ├── attrition_parser.py     # Парсинг CSV датасета
 │   └── scripts/
 │       ├── download_data.py    # Загрузка датасета в data/raw
 │       ├── register_kernel.py  # Регистрация jupyter-kernel
 │       └── make_synthetic_train.py # Синтетическое расширение train
 ├── tests
-│   └── test.py                 # Тесты пайплайна
+│   ├── test.py                 # Тесты пайплайна
+│   └── test_attrition_parser.py # Тесты парсера CSV
 ├── requirements.txt
 ├── pyproject.toml
+├── Makefile                    # Линтеры: make lint
 ├── Dockerfile                  # Контейнер
 ├── docker-compose.yml
 └── README.md
@@ -51,8 +55,8 @@
 
 ```bash
 # 1. Клонировать репозиторий
-git clone https://github.com/hsemlcourse/hseml-group-project-aleksandra-ts
-cd hseml-group-project-aleksandra-ts
+git clone https://github.com/hsemlcourse/hseml-group-project-aleksandra-ts-3
+cd hseml-group-project-aleksandra-ts-3
 python -m venv .venv
 # Windows: .venv\Scripts\activate
 # Linux/macOS: source .venv/bin/activate
@@ -71,6 +75,21 @@ docker compose run --rm app
 
 Образ выполняет `download_data` и `pytest` (см. `Dockerfile`)
 
+### Линтеры
+
+После `pip install -r requirements.txt`:
+
+```bash
+make lint
+```
+
+На Windows без `make` можно:
+
+```bash
+ruff check src/ tests/ --line-length 120
+flake8 src/ tests/ --max-line-length=120 --extend-ignore=E203,W503
+```
+
 ### Запустить ноутбуки
 
 Пошагово:
@@ -80,7 +99,7 @@ docker compose run --rm app
    ```bash
    python -m src.scripts.register_kernel
    ```
-3. Открыть ноутбук и выберать kernel `Python (hseml-attrition)`
+3. Открыть ноутбук и выбрать kernel `Python (hseml-attrition)`
 4. Запуск ноутбуков по порядку:
    - `notebooks/01_eda.ipynb`
    - `notebooks/02_baseline.ipynb`
@@ -89,7 +108,7 @@ docker compose run --rm app
 
 ## Данные
 
-- Исходный CSV: `WA_Fn-UseC_-HR-Employee-Attrition.csv` в `data/raw/` **или** выполните `python -m src.scripts.download_data`.
+- Исходный CSV: `WA_Fn-UseC_-HR-Employee-Attrition.csv` в `data/raw/` **или** выполните `python -m src.scripts.download_data` (скачивание HTTP + **парсинг CSV** через `csv.DictReader` в `src/attrition_parser.py`, затем сохранение)
 - Сплит **64% / 16% / 20%** (train / val / test), стратификация по `Attrition`. Утечки по времени нет: срез анкеты, нет временных рядов: используется случайное стратифицированное разбиение
 
 ### Синтетическое расширение train (10 000+)
