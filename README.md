@@ -26,11 +26,19 @@
 │   ├── 01_eda.ipynb            # EDA
 │   ├── 02_baseline.ipynb       # Baseline-модель
 │   └── 03_experiments.ipynb    # Эксперименты и ablation study
+├── app
+│   ├── streamlit_app.py        # UI деплоя
+│   └── theme.py                # CSS
 ├── presentation                # Презентация для защиты
 ├── report
 │   ├── images                  # Изображения для отчёта
 │   └── report.md               # Финальный отчёт
 ├── src
+│   ├── api
+│   │   ├── app.py              # FastAPI
+│   │   └── schemas.py          # Pydantic-схемы
+│   ├── inference.py            # Загрузка модели и predict
+│   ├── deploy_preprocessing.py # Препроцессинг для деплоя
 │   ├── preprocessing.py        # Предобработка данных
 │   ├── modeling.py             # Обучение и оценка моделей
 │   ├── config.py               # Настройки проекта
@@ -53,58 +61,96 @@
 
 ## Запуск
 
+### 1. Окружение
+
 ```bash
-# 1. Клонировать репозиторий
 git clone https://github.com/hsemlcourse/hseml-group-project-aleksandra-ts-3
 cd hseml-group-project-aleksandra-ts-3
 python -m venv .venv
-# Windows: .venv\Scripts\activate
-# Linux/macOS: source .venv/bin/activate
+```
 
+Активация venv:
+
+- **Windows (PowerShell):** `.\.venv\Scripts\Activate`
+- **Windows (cmd):** `.venv\Scripts\activate.bat`
+- **Linux/macOS:** `source .venv/bin/activate`
+
+```bash
 python -m pip install -r requirements.txt
 python -m src.scripts.download_data
 python -m pytest tests/ -q
 ```
 
-### Docker
+### 2. Деплой (API + Streamlit)
+
+Перед запуском сервисов нужен артефакт модели:
+
+```bash
+python -m src.scripts.export_deploy
+```
+
+Создаются:
+
+- `models/deploy_bundle.joblib`: RandomForest tuned + препроцессор
+- `models/deploy_meta.json`: метаданные и пороги риска
+- `models/default_employee.json`: демо-профиль для формы и API
+
+Далее:
+
+**FastAPI**: REST-прогнозы, Swagger:
+
+```bash
+uvicorn src.api.app:app --reload --host 127.0.0.1 --port 8000
+```
+
+- Документация: http://127.0.0.1:8000/docs  
+- Проверка: `GET /health`, `GET /defaults`, `POST /predict`
+
+**Streamlit**: веб-форма для HR:
+
+```bash
+streamlit run app/streamlit_app.py --server.port 8501
+```
+
+- Интерфейс: http://127.0.0.1:8501
+
+### 3. Docker
+
+Сборка и проверка пайплайна (загрузка данных + тесты):
 
 ```bash
 docker compose build
 docker compose run --rm app
 ```
 
-Образ выполняет `download_data` и `pytest` (см. `Dockerfile`)
+Деплой в контейнерах (нужен `models/deploy_bundle.joblib` на хосте: сначала `export_deploy` локально):
+
+```bash
+docker compose up api streamlit
+```
+
+- API: http://127.0.0.1:8000/docs  
+- Streamlit: http://127.0.0.1:8501  
+
+### 4. Ноутбуки (обучение и эксперименты)
+
+1. Интерпретатор: `.venv\Scripts\python.exe` (Windows) или `.venv/bin/python` (Linux/macOS)
+2. При необходимости kernel: `python -m src.scripts.register_kernel`
+3. По порядку: `notebooks/01_eda.ipynb` -> `02_baseline.ipynb` -> `03_experiments.ipynb`
+4. Артефакты обучения появляются в `models/`, для сервиса выполните `export_deploy`
 
 ### Линтеры
-
-После `pip install -r requirements.txt`:
 
 ```bash
 make lint
 ```
 
-На Windows без `make` можно:
+Без `make`:
 
 ```bash
 ruff check src/ tests/ --line-length 120
 flake8 src/ tests/ --max-line-length=120 --extend-ignore=E203,W503
 ```
-
-### Запустить ноутбуки
-
-Пошагово:
-
-1. Проверить интерпретатор: `.venv\Scripts\python.exe` (Windows) или `.venv/bin/python` (Linux/macOS)
-2. Если kernel не виден, зарегистрировать:
-   ```bash
-   python -m src.scripts.register_kernel
-   ```
-3. Открыть ноутбук и выбрать kernel `Python (hseml-attrition)`
-4. Запуск ноутбуков по порядку:
-   - `notebooks/01_eda.ipynb`
-   - `notebooks/02_baseline.ipynb`
-   - `notebooks/03_experiments.ipynb`
-5. После `03_experiments.ipynb` проверить, что артефакты модели появились в `models/`
 
 ## Данные
 
